@@ -48,3 +48,18 @@ export const userOffboarding = functions.auth.user().onDelete(async (user) => {
   // Delete associated companyUser document
   await admin.firestore().collection('companyUsers').doc(uid).delete();
 });
+
+export const hobbyDeleted = functions.firestore
+  .document('companies/{companyId}/hobbies/{hobbyId}')
+  .onDelete(async (snapshot, context) => {
+    const hobbyId: string = context.params.hobbyId;
+    if (hobbyId) {
+      // Delete corresponding hobby image if it exists
+      const bucket = admin.storage().bucket();
+      const file = bucket.file(hobbyId);
+      if (await file.exists()) {
+        await file.delete();
+      }
+    }
+  });
+

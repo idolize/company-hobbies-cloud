@@ -1,0 +1,40 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function verifiedEmail() {
+      return request.auth.uid != null && request.auth.token.email_verified;
+    }
+
+    function validString(val, len) {
+      return val is string && val.size() > 1 && val.size < len;
+    }
+
+    match /companies/{companyId} {
+      function verifiedEmployee() {
+        return verifiedEmail() && request.auth.token.company_id == companyId;
+      }
+
+      allow get: if verifiedEmployee();
+
+      match /hobbies/{hobbyId} {
+        function validHobby() {
+        	return validString(request.resource.data.name, 20) &&
+            validString(request.resource.data.description, 200) &&
+            request.resource.data.external is map;
+        }
+
+        allow read, write: if verifiedEmployee() && validHobby();
+      }
+  }
+
+    match /companyUsers/{userId} {
+      allow read: if (
+        // Only allow verified employees of a company to see other employees,
+        // or unverified employees can fetch their own user
+        verifiedEmail() &&
+        resource.data.company == /companies/$(request.auth.token.company_id)
+      ) || request.auth.uid == userId;
+    }
+  }
+}

@@ -1,0 +1,35 @@
+rules_version = '2';
+
+service firebase.storage {
+  match /b/{bucket}/o {
+    function verifiedEmail() {
+      return request.auth.uid != null && request.auth.token.email_verified;
+    }
+
+    function imageData() {
+      // 1) File is less than 5MB
+      // 2) Content type is a PNG image
+      // 3) Uploaded content type matches existing content type
+      // 4) File name (stored in imageId wildcard variable) is less than 32 characters
+      return request.resource.size < 5 * 1024 * 1024
+          && request.resource.contentType == 'image/png' // or for any image: .matches('image/.*')
+          && request.resource.contentType == resource.contentType
+          && imageId.size() < 32;
+    }
+
+    match /images {
+      match /{companyId} {
+        function verifiedEmployee() {
+          return verifiedEmail() && request.auth.token.company_id == companyId;
+        }
+
+        allow read;
+
+        match /hobbies/{hobbyId} {
+          allow read;
+          allow write: if verifiedEmployee() && imageData();
+        }
+      }
+    }
+  }
+}
