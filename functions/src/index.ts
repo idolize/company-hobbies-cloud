@@ -49,7 +49,7 @@ export const newUserOnboarding = functions.auth.user().onCreate(async (user) => 
       admin.auth().setCustomUserClaims(uid, { company_id: company.id }),
       // Associate a companyUser document to help us find all users for a hobby & all of a user's hobbies
       admin.firestore().collection('companyUsers').doc(uid).set({
-        company: company.ref.path,
+        company: company.ref,
       }),
       // Send an initial verification email to the user
       sendEmailVerificationIfNeeded(user),
