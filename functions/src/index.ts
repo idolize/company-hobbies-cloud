@@ -1,9 +1,20 @@
 import * as functions from 'firebase-functions';
 import admin from 'firebase-admin';
-import firebase from 'firebase';
+import * as firebase from 'firebase/app';
+// tslint:disable-next-line: no-import-side-effect
+import 'firebase/auth';
 
-// https://firebase.google.com/docs/functions/typescript
-admin.initializeApp();
+// Setup both the admin and client JS SDKs for firebase
+const app = admin.initializeApp();
+firebase.initializeApp({
+  apiKey: 'AIzaSyBOjY4FRLh8EtTrHXtMoPo7C8GtStVLu7Y',
+  authDomain: 'company-hobbies.firebaseapp.com',
+  databaseURL: app.options.databaseURL,
+  projectId: app.options.projectId,
+  storageBucket: app.options.storageBucket,
+  messagingSenderId: '991996389799',
+  appID: '1:991996389799:web:555d99a85b790f4e',
+});
 
 const findCompanyForDomain = async (domain: string): Promise<FirebaseFirestore.QueryDocumentSnapshot | undefined> => {
   const companies = await admin.firestore().collection('companies').get();
@@ -23,6 +34,9 @@ const sendEmailVerificationIfNeeded = async (user: admin.auth.UserRecord): Promi
     }
   }
 }
+
+// All exported functions are considered "cloud functions"
+// https://firebase.google.com/docs/functions/typescript
 
 export const newUserOnboarding = functions.auth.user().onCreate(async (user) => {
   const { uid, email } = user;
